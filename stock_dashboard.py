@@ -40,20 +40,107 @@ st.markdown(
             border-right: 1px solid #334155;
         }
 
-        [data-testid="stSidebar"] * {
-            color: #F8FAFC !important;
-        }
-
+        /* Sidebar labels only */
         [data-testid="stSidebar"] label,
         [data-testid="stSidebar"] p,
-        [data-testid="stSidebar"] span {
-            color: #E5E7EB !important;
+        [data-testid="stSidebar"] h1,
+        [data-testid="stSidebar"] h2,
+        [data-testid="stSidebar"] h3,
+        [data-testid="stSidebar"] h4,
+        [data-testid="stSidebar"] h5,
+        [data-testid="stSidebar"] h6 {
+            color: #F8FAFC !important;
             opacity: 1 !important;
         }
 
-        input, textarea, select {
-            color: #111827 !important;
+        /* Sidebar captions */
+        [data-testid="stSidebar"] .stCaptionContainer,
+        [data-testid="stSidebar"] .stCaptionContainer p {
+            color: #CBD5E1 !important;
+            opacity: 1 !important;
+        }
+
+        /* Text input boxes */
+        [data-testid="stSidebar"] div[data-baseweb="input"] {
             background-color: #FFFFFF !important;
+            border-radius: 8px !important;
+        }
+
+        [data-testid="stSidebar"] div[data-baseweb="input"] input {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+            background-color: #FFFFFF !important;
+            caret-color: #000000 !important;
+            font-weight: 700 !important;
+        }
+
+        [data-testid="stSidebar"] input {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+            background-color: #FFFFFF !important;
+            caret-color: #000000 !important;
+            font-weight: 700 !important;
+        }
+
+        /* Number input */
+        [data-testid="stSidebar"] input[type="number"] {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+            background-color: #FFFFFF !important;
+            caret-color: #000000 !important;
+            font-weight: 700 !important;
+        }
+
+        /* Number input plus/minus buttons */
+        [data-testid="stSidebar"] button {
+            color: #000000 !important;
+        }
+
+        /* But keep the main run button white text */
+        [data-testid="stSidebar"] .stButton button {
+            background: #2563EB !important;
+            color: #FFFFFF !important;
+            border: 1px solid #60A5FA !important;
+            font-weight: 800 !important;
+            border-radius: 10px !important;
+        }
+
+        [data-testid="stSidebar"] .stButton button:hover {
+            background: #1D4ED8 !important;
+            color: #FFFFFF !important;
+        }
+
+        /* Select/dropdown boxes */
+        [data-testid="stSidebar"] div[data-baseweb="select"] > div {
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            border-radius: 8px !important;
+        }
+
+        [data-testid="stSidebar"] div[data-baseweb="select"] span {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+            font-weight: 700 !important;
+        }
+
+        [data-testid="stSidebar"] div[data-baseweb="select"] svg {
+            color: #000000 !important;
+            fill: #000000 !important;
+        }
+
+        /* Date input */
+        [data-testid="stSidebar"] .stDateInput input {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+            background-color: #FFFFFF !important;
+            caret-color: #000000 !important;
+            font-weight: 700 !important;
+        }
+
+        /* Checkbox label */
+        [data-testid="stSidebar"] .stCheckbox label span {
+            color: #F8FAFC !important;
+            font-weight: 700 !important;
         }
 
         .main-title {
@@ -163,13 +250,6 @@ st.markdown(
             margin-bottom: 1rem;
         }
 
-        div[data-testid="stMetric"] {
-            background: #1E293B;
-            border: 1px solid #475569;
-            padding: 16px;
-            border-radius: 14px;
-        }
-
         .stTabs [data-baseweb="tab-list"] {
             gap: 8px;
         }
@@ -197,25 +277,10 @@ st.markdown(
             border: 1px solid #475569;
             border-radius: 12px;
         }
-
-        .stButton > button {
-            background: #2563EB !important;
-            color: #FFFFFF !important;
-            border: 1px solid #60A5FA !important;
-            font-weight: 800 !important;
-            border-radius: 10px !important;
-        }
-
-        .stButton > button:hover {
-            background: #1D4ED8 !important;
-            color: #FFFFFF !important;
-        }
     </style>
     """,
     unsafe_allow_html=True
 )
-
-
 # ============================================================
 # CONSTANTS
 # ============================================================
