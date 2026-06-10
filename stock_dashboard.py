@@ -388,7 +388,7 @@ def color_span(value, text=None, reverse=False):
 # DARK TABLE HELPER
 # ============================================================
 
-ddef dark_table(df, title=None):
+def dark_table(df, title=None):
     """
     Display a pandas DataFrame as a dark HTML table.
     This version avoids Streamlit rendering the HTML as a code block.
