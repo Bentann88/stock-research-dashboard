@@ -388,42 +388,67 @@ def color_span(value, text=None, reverse=False):
 # DARK TABLE HELPER
 # ============================================================
 
-def dark_table(df, title=None):
-    title_html = ""
-
-    if title:
-        title_html = f"""
-        <div style="
-            font-size:1.25rem;
-            font-weight:800;
-            color:#FFFFFF;
-            margin-top:1.2rem;
-            margin-bottom:0.6rem;
-        ">
-            {title}
-        </div>
-        """
+ddef dark_table(df, title=None):
+    """
+    Display a pandas DataFrame as a dark HTML table.
+    This version avoids Streamlit rendering the HTML as a code block.
+    """
 
     html_table = df.to_html(index=False, escape=False)
 
-    st.markdown(
-        f"""
-        {title_html}
-        <div style="
-            background:#111827;
-            border:1px solid #334155;
-            border-radius:14px;
-            padding:0;
-            overflow-x:auto;
-            margin-bottom:1.5rem;
-            box-shadow:0 8px 22px rgba(0,0,0,0.25);
-        ">
-            {html_table}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    title_html = ""
+    if title:
+        title_html = f"""
+<div style="font-size:1.25rem; font-weight:800; color:#FFFFFF; margin-top:1.2rem; margin-bottom:0.6rem;">
+    {title}
+</div>
+"""
 
+    html = f"""
+{title_html}
+<div style="background:#111827; border:1px solid #334155; border-radius:14px; padding:0; overflow-x:auto; margin-bottom:1.5rem; box-shadow:0 8px 22px rgba(0,0,0,0.25);">
+    <style>
+        table {{
+            width:100%;
+            border-collapse:collapse;
+            background:#111827 !important;
+            color:#F8FAFC !important;
+            font-size:0.95rem;
+        }}
+
+        thead tr {{
+            background:#1E293B !important;
+        }}
+
+        th {{
+            color:#CBD5E1 !important;
+            font-weight:800 !important;
+            padding:13px 15px !important;
+            border-bottom:1px solid #334155 !important;
+            text-align:left !important;
+            white-space:nowrap;
+        }}
+
+        td {{
+            color:#F8FAFC !important;
+            padding:12px 15px !important;
+            border-bottom:1px solid #253044 !important;
+            white-space:nowrap;
+        }}
+
+        tbody tr:nth-child(even) {{
+            background:#0F172A !important;
+        }}
+
+        tbody tr:hover {{
+            background:#1E293B !important;
+        }}
+    </style>
+    {html_table}
+</div>
+"""
+
+    st.markdown(html, unsafe_allow_html=True)
 
 # ============================================================
 # DATA HELPERS
