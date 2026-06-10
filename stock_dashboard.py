@@ -1602,6 +1602,48 @@ with tab_tables:
         use_container_width=True
     )
 
+# ============================================================
+# MULTI-STOCK COMPARE TAB
+# ============================================================
+
+with tab_multi:
+    section_header("Compare Multiple Stocks")
+
+    multi_tickers = parse_ticker_list(multi_tickers_input)
+
+    if len(multi_tickers) == 0:
+        st.info("Enter multiple tickers in the sidebar, separated by commas.")
+    else:
+        st.markdown(
+            f"""
+            <div class="advisor-box">
+                <b>Advisor Note:</b><br>
+                This view compares multiple stocks using the same selected time period and the same initial investment.
+                It can help compare concentrated holdings, watchlist names, replacement candidates, or different stocks
+                within the same sector.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        multi_fig, multi_summary = multi_stock_growth_chart(
+            tickers=multi_tickers,
+            start_date=start_date,
+            end_date=end_date,
+            period_choice=period_choice,
+            initial_investment=initial_investment
+        )
+
+        st.plotly_chart(
+            multi_fig,
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
+
+        if not multi_summary.empty:
+            dark_table(multi_summary, "Multi-Stock Performance Summary", height=420)
+        else:
+            st.warning("No valid data found for the entered tickers.")
 
 # ============================================================
 # DISCLAIMER
