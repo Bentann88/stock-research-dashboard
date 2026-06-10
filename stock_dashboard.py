@@ -1010,6 +1010,13 @@ def rolling_period_summary_table(full_data, ticker):
 st.sidebar.markdown("## 📊 Research Inputs")
 
 ticker = st.sidebar.text_input("Stock Ticker", value="AAPL").upper().strip()
+
+multi_tickers_input = st.sidebar.text_input(
+    "Compare Multiple Stocks",
+    value="AAPL, MSFT, COST",
+    help="Enter tickers separated by commas. Example: AAPL, MSFT, NVDA, COST"
+)
+
 benchmark = st.sidebar.text_input("Benchmark Ticker", value="SPY").upper().strip()
 
 period_choice = st.sidebar.selectbox(
