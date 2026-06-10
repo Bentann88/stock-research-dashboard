@@ -389,67 +389,113 @@ def color_span(value, text=None, reverse=False):
 # DARK TABLE HELPER
 # ============================================================
 
-def dark_table(df, title=None):
+def dark_table(df, title=None, height=None):
     """
-    Display a pandas DataFrame as a dark HTML table.
-    This version avoids Streamlit rendering the HTML as a code block.
+    Display a pandas DataFrame as a properly formatted dark HTML table.
+    Uses Streamlit components so the table does not collapse into inline text.
     """
 
-    html_table = df.to_html(index=False, escape=False)
+    if df is None or df.empty:
+        st.info("No table data available.")
+        return
+
+    if height is None:
+        height = min(700, 120 + len(df) * 42)
 
     title_html = ""
     if title:
         title_html = f"""
-<div style="font-size:1.25rem; font-weight:800; color:#FFFFFF; margin-top:1.2rem; margin-bottom:0.6rem;">
-    {title}
-</div>
-"""
+        <div class="table-title">{title}</div>
+        """
+
+    html_table = df.to_html(index=False, escape=False)
 
     html = f"""
-{title_html}
-<div style="background:#111827; border:1px solid #334155; border-radius:14px; padding:0; overflow-x:auto; margin-bottom:1.5rem; box-shadow:0 8px 22px rgba(0,0,0,0.25);">
-    <style>
-        table {{
-            width:100%;
-            border-collapse:collapse;
-            background:#111827 !important;
-            color:#F8FAFC !important;
-            font-size:0.95rem;
-        }}
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{
+                margin: 0;
+                padding: 0;
+                background: #0B1120;
+                font-family: Arial, sans-serif;
+                color: #F8FAFC;
+            }}
 
-        thead tr {{
-            background:#1E293B !important;
-        }}
+            .table-title {{
+                font-size: 20px;
+                font-weight: 800;
+                color: #FFFFFF;
+                margin: 0 0 12px 0;
+            }}
 
-        th {{
-            color:#CBD5E1 !important;
-            font-weight:800 !important;
-            padding:13px 15px !important;
-            border-bottom:1px solid #334155 !important;
-            text-align:left !important;
-            white-space:nowrap;
-        }}
+            .table-wrap {{
+                background: #111827;
+                border: 1px solid #334155;
+                border-radius: 14px;
+                overflow-x: auto;
+                overflow-y: auto;
+                box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+            }}
 
-        td {{
-            color:#F8FAFC !important;
-            padding:12px 15px !important;
-            border-bottom:1px solid #253044 !important;
-            white-space:nowrap;
-        }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                background: #111827;
+                color: #F8FAFC;
+                font-size: 14px;
+                min-width: 850px;
+            }}
 
-        tbody tr:nth-child(even) {{
-            background:#0F172A !important;
-        }}
+            thead tr {{
+                background: #1E293B;
+            }}
 
-        tbody tr:hover {{
-            background:#1E293B !important;
-        }}
-    </style>
-    {html_table}
-</div>
-"""
+            th {{
+                color: #CBD5E1;
+                font-weight: 800;
+                padding: 12px 14px;
+                border-bottom: 1px solid #334155;
+                text-align: left;
+                white-space: nowrap;
+                position: sticky;
+                top: 0;
+                background: #1E293B;
+                z-index: 2;
+            }}
 
-    st.markdown(html, unsafe_allow_html=True)
+            td {{
+                color: #F8FAFC;
+                padding: 11px 14px;
+                border-bottom: 1px solid #253044;
+                text-align: left;
+                white-space: nowrap;
+            }}
+
+            tbody tr:nth-child(even) {{
+                background: #0F172A;
+            }}
+
+            tbody tr:hover {{
+                background: #1E293B;
+            }}
+
+            span {{
+                font-weight: 800;
+            }}
+        </style>
+    </head>
+    <body>
+        {title_html}
+        <div class="table-wrap">
+            {html_table}
+        </div>
+    </body>
+    </html>
+    """
+
+    components.html(html, height=height, scrolling=True)
 
 # ============================================================
 # DATA HELPERS
