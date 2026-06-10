@@ -25,7 +25,7 @@ st.set_page_config(
 
 
 # ============================================================
-# CSS — DARK PROFESSIONAL THEME + READABLE INPUTS + DARK TABLES
+# CSS — DARK PROFESSIONAL THEME
 # ============================================================
 
 st.markdown(
@@ -118,7 +118,7 @@ st.markdown(
         }
 
         .main-title {
-            font-size: 2.5rem;
+            font-size: 2.25rem;
             font-weight: 900;
             color: #FFFFFF;
             margin-bottom: 0.3rem;
@@ -158,7 +158,7 @@ st.markdown(
         }
 
         .metric-value {
-            font-size: 1.65rem;
+            font-size: 1.55rem;
             font-weight: 900;
             color: #FFFFFF;
             letter-spacing: 0.2px;
@@ -251,45 +251,6 @@ st.markdown(
             box-shadow: 0 8px 22px rgba(0,0,0,0.28);
             margin-bottom: 24px;
         }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #111827 !important;
-            color: #F8FAFC !important;
-            border: 1px solid #334155;
-            border-radius: 14px;
-            overflow: hidden;
-            font-size: 0.95rem;
-        }
-
-        thead tr {
-            background: #1E293B !important;
-        }
-
-        th {
-            color: #CBD5E1 !important;
-            font-weight: 800 !important;
-            padding: 13px 15px !important;
-            border-bottom: 1px solid #334155 !important;
-            text-align: left !important;
-            white-space: nowrap;
-        }
-
-        td {
-            color: #F8FAFC !important;
-            padding: 12px 15px !important;
-            border-bottom: 1px solid #253044 !important;
-            white-space: nowrap;
-        }
-
-        tbody tr:nth-child(even) {
-            background: #0F172A !important;
-        }
-
-        tbody tr:hover {
-            background: #1E293B !important;
-        }
     </style>
     """,
     unsafe_allow_html=True
@@ -370,17 +331,14 @@ def drawdown_class(x):
     return "negative" if x < 0 else "neutral"
 
 
-def color_span(value, text=None, reverse=False):
+def color_span(value, text=None):
     if text is None:
         text = fmt_pct(value)
 
     if value is None or pd.isna(value):
         color = "#FFFFFF"
     else:
-        if reverse:
-            color = "#4ADE80" if value >= 0 else "#F87171"
-        else:
-            color = "#4ADE80" if value >= 0 else "#F87171"
+        color = "#4ADE80" if value >= 0 else "#F87171"
 
     return f'<span style="color:{color}; font-weight:800;">{text}</span>'
 
@@ -392,7 +350,7 @@ def color_span(value, text=None, reverse=False):
 def dark_table(df, title=None, height=None):
     """
     Display a pandas DataFrame as a properly formatted dark HTML table.
-    Uses Streamlit components so the table does not collapse into inline text.
+    Uses Streamlit components to prevent tables from rendering as raw text.
     """
 
     if df is None or df.empty:
@@ -400,13 +358,11 @@ def dark_table(df, title=None, height=None):
         return
 
     if height is None:
-        height = min(700, 120 + len(df) * 42)
+        height = min(750, 130 + len(df) * 44)
 
     title_html = ""
     if title:
-        title_html = f"""
-        <div class="table-title">{title}</div>
-        """
+        title_html = f'<div class="table-title">{title}</div>'
 
     html_table = df.to_html(index=False, escape=False)
 
@@ -445,7 +401,7 @@ def dark_table(df, title=None, height=None):
                 background: #111827;
                 color: #F8FAFC;
                 font-size: 14px;
-                min-width: 850px;
+                min-width: 780px;
             }}
 
             thead tr {{
@@ -497,6 +453,7 @@ def dark_table(df, title=None, height=None):
 
     components.html(html, height=height, scrolling=True)
 
+
 # ============================================================
 # DATA HELPERS
 # ============================================================
@@ -526,28 +483,32 @@ def get_date_range(period_choice, custom_start, custom_end):
 def load_price_data(ticker, start_date=None, end_date=None, period="max", initial_investment=10000):
     ticker = ticker.upper().strip()
 
-    stock = yf.Ticker(ticker)
+    try:
+        stock = yf.Ticker(ticker)
 
-    if start_date is None:
-        data = stock.history(period=period, auto_adjust=True)
-    else:
-        data = stock.history(start=start_date, end=end_date, auto_adjust=True)
+        if start_date is None:
+            data = stock.history(period=period, auto_adjust=True)
+        else:
+            data = stock.history(start=start_date, end=end_date, auto_adjust=True)
 
-    if data.empty:
+        if data.empty:
+            return pd.DataFrame()
+
+        data = data.copy()
+        data.index = pd.to_datetime(data.index)
+
+        data["Daily Return"] = data["Close"].pct_change()
+        data["Growth of $1"] = (1 + data["Daily Return"]).cumprod()
+        data["Growth of $1"] = data["Growth of $1"].fillna(1.0)
+        data["Portfolio Value"] = data["Growth of $1"] * initial_investment
+
+        running_max = data["Portfolio Value"].cummax()
+        data["Drawdown"] = data["Portfolio Value"] / running_max - 1
+
+        return data
+
+    except Exception:
         return pd.DataFrame()
-
-    data = data.copy()
-    data.index = pd.to_datetime(data.index)
-
-    data["Daily Return"] = data["Close"].pct_change()
-    data["Growth of $1"] = (1 + data["Daily Return"]).cumprod()
-    data["Growth of $1"] = data["Growth of $1"].fillna(1.0)
-    data["Portfolio Value"] = data["Growth of $1"] * initial_investment
-
-    running_max = data["Portfolio Value"].cummax()
-    data["Drawdown"] = data["Portfolio Value"] / running_max - 1
-
-    return data
 
 
 @st.cache_data(show_spinner=False)
@@ -863,6 +824,74 @@ def annual_returns_chart(data, ticker, full_history=False):
     return fig, annual_returns
 
 
+def multi_stock_growth_chart(tickers, start_date, end_date, initial_investment):
+    fig = go.Figure()
+
+    color_list = [
+        "#38BDF8",
+        "#F59E0B",
+        "#22C55E",
+        "#A78BFA",
+        "#F87171",
+        "#14B8A6",
+        "#E879F9",
+        "#FACC15"
+    ]
+
+    summary_rows = []
+
+    for i, symbol in enumerate(tickers):
+        if start_date is None:
+            temp_data = load_price_data(
+                symbol,
+                period="max",
+                initial_investment=initial_investment
+            )
+        else:
+            temp_data = load_price_data(
+                symbol,
+                start_date=start_date,
+                end_date=end_date,
+                initial_investment=initial_investment
+            )
+
+        if temp_data.empty:
+            continue
+
+        temp_metrics = calculate_metrics(temp_data, symbol, initial_investment)
+
+        fig.add_trace(
+            go.Scatter(
+                x=temp_data.index,
+                y=temp_data["Portfolio Value"],
+                mode="lines",
+                name=symbol,
+                line=dict(width=2.5, color=color_list[i % len(color_list)]),
+                hovertemplate=f"{symbol}: $%{{y:,.2f}}<extra></extra>"
+            )
+        )
+
+        summary_rows.append({
+            "Ticker": symbol,
+            "Total Return": color_span(temp_metrics["Total Return"]),
+            "CAGR": color_span(temp_metrics["CAGR"]),
+            "Max Drawdown": color_span(temp_metrics["Max Drawdown"]),
+            "Volatility": fmt_pct(temp_metrics["Annualized Volatility"]),
+            "Ending Value": fmt_dollar(temp_metrics["Ending Value"])
+        })
+
+    fig = apply_chart_layout(
+        fig,
+        f"Growth of {fmt_dollar(initial_investment)} Across Multiple Stocks",
+        "Portfolio Value",
+        height=520
+    )
+
+    fig.update_yaxes(tickprefix="$")
+
+    return fig, pd.DataFrame(summary_rows)
+
+
 # ============================================================
 # UI HELPERS
 # ============================================================
@@ -933,8 +962,64 @@ def advisor_summary(ticker, benchmark, metrics, benchmark_metrics=None):
 
 
 # ============================================================
-# FULL HISTORY TABLE HELPERS
+# FULL HISTORY HELPERS
 # ============================================================
+
+def parse_ticker_list(ticker_string):
+    if not ticker_string:
+        return []
+
+    tickers = [
+        x.strip().upper()
+        for x in ticker_string.split(",")
+        if x.strip()
+    ]
+
+    clean_tickers = []
+    for t in tickers:
+        if t not in clean_tickers:
+            clean_tickers.append(t)
+
+    return clean_tickers
+
+
+def bad_good_year_summary_cards(full_data, ticker):
+    annual_returns = full_data["Close"].resample("YE").last().pct_change().dropna()
+    annual_returns.index = annual_returns.index.year
+
+    if annual_returns.empty:
+        st.warning("Not enough annual return history available.")
+        return
+
+    best_year = annual_returns.idxmax()
+    best_return = annual_returns.max()
+
+    worst_year = annual_returns.idxmin()
+    worst_return = annual_returns.min()
+
+    positive_years = int((annual_returns > 0).sum())
+    negative_years = int((annual_returns < 0).sum())
+    total_years = len(annual_returns)
+
+    positive_year_pct = positive_years / total_years if total_years > 0 else np.nan
+
+    c1, c2, c3, c4, c5 = st.columns(5)
+
+    with c1:
+        metric_card("Best Year", f"{best_year}<br>{fmt_pct(best_return)}", "positive")
+
+    with c2:
+        metric_card("Worst Year", f"{worst_year}<br>{fmt_pct(worst_return)}", "negative")
+
+    with c3:
+        metric_card("Positive Years", f"{positive_years} of {total_years}", "positive")
+
+    with c4:
+        metric_card("Negative Years", f"{negative_years} of {total_years}", "negative")
+
+    with c5:
+        metric_card("Positive Year %", fmt_pct(positive_year_pct), "neutral")
+
 
 def best_worst_years_table(full_data, ticker):
     annual_returns = full_data["Close"].resample("YE").last().pct_change().dropna()
@@ -961,7 +1046,49 @@ def best_worst_years_table(full_data, ticker):
         })
 
     df = pd.DataFrame(rows)
-    dark_table(df, f"{ticker} Best and Worst Calendar Years")
+    dark_table(df, f"{ticker} Best and Worst Calendar Years", height=560)
+
+
+def worst_rolling_periods_table(full_data, ticker):
+    periods = {
+        "1-Year": 252,
+        "3-Year": 252 * 3,
+        "5-Year": 252 * 5,
+        "10-Year": 252 * 10
+    }
+
+    rows = []
+
+    for label, window in periods.items():
+        temp = full_data.copy()
+        rolling_col = f"{label} Rolling Return"
+
+        temp[rolling_col] = temp["Close"] / temp["Close"].shift(window) - 1
+        rolling_series = temp[rolling_col].dropna()
+
+        if rolling_series.empty:
+            rows.append({
+                "Rolling Period": label,
+                "Worst Return": "N/A",
+                "Approx. Period Start": "N/A",
+                "Period End": "N/A"
+            })
+        else:
+            worst_return = rolling_series.min()
+            worst_end_date = rolling_series.idxmin()
+            worst_end_position = full_data.index.get_loc(worst_end_date)
+            worst_start_position = max(0, worst_end_position - window)
+            worst_start_date = full_data.index[worst_start_position]
+
+            rows.append({
+                "Rolling Period": label,
+                "Worst Return": color_span(worst_return),
+                "Approx. Period Start": str(worst_start_date.date()),
+                "Period End": str(worst_end_date.date())
+            })
+
+    df = pd.DataFrame(rows)
+    dark_table(df, f"{ticker} Worst Rolling Return Periods", height=360)
 
 
 def rolling_period_summary_table(full_data, ticker):
@@ -976,9 +1103,10 @@ def rolling_period_summary_table(full_data, ticker):
 
     for label, window in periods.items():
         temp = full_data.copy()
-        temp[f"{label} Rolling Return"] = temp["Close"] / temp["Close"].shift(window) - 1
+        rolling_col = f"{label} Rolling Return"
 
-        rolling_series = temp[f"{label} Rolling Return"].dropna()
+        temp[rolling_col] = temp["Close"] / temp["Close"].shift(window) - 1
+        rolling_series = temp[rolling_col].dropna()
 
         if rolling_series.empty:
             rows.append({
@@ -1000,7 +1128,7 @@ def rolling_period_summary_table(full_data, ticker):
             })
 
     df = pd.DataFrame(rows)
-    dark_table(df, f"{ticker} Historical Rolling Return Summary")
+    dark_table(df, f"{ticker} Historical Rolling Return Summary", height=360)
 
 
 # ============================================================
@@ -1013,7 +1141,7 @@ ticker = st.sidebar.text_input("Stock Ticker", value="AAPL").upper().strip()
 
 multi_tickers_input = st.sidebar.text_input(
     "Compare Multiple Stocks",
-    value="AAPL, MSFT, COST",
+    value="AAPL, MSFT, NVDA, COST",
     help="Enter tickers separated by commas. Example: AAPL, MSFT, NVDA, COST"
 )
 
@@ -1075,9 +1203,9 @@ st.sidebar.caption("Data source: Yahoo Finance via yfinance. Verify externally f
 # MAIN APP HEADER
 # ============================================================
 
-st.markdown('<div class="main-title">📈 Stock History Research Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Stock History Research Dashboard</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="subtitle">Advisor-facing stock research with performance, risk, stress-period testing, full-history context, and benchmark comparison.</div>',
+    '<div class="subtitle">Advisor-facing stock research with performance, risk, stress-period testing, full-history context, multi-stock comparison, and benchmark analysis.</div>',
     unsafe_allow_html=True
 )
 
@@ -1156,14 +1284,15 @@ with top_cols[4]:
 # TABS
 # ============================================================
 
-tab_overview, tab_risk, tab_benchmark, tab_stress, tab_full_history, tab_tables = st.tabs(
+tab_overview, tab_risk, tab_benchmark, tab_stress, tab_full_history, tab_multi, tab_tables = st.tabs(
     [
         "Overview",
         "Risk",
-        "Benchmark Comparison",
-        "Stress Periods",
+        "Benchmark",
+        "Stress Test",
         "Full History",
-        "Historical Tables"
+        "Multi-Stock Compare",
+        "Tables"
     ]
 )
 
@@ -1307,6 +1436,7 @@ with tab_risk:
     section_header("Calendar-Year Returns")
 
     annual_fig, annual_returns = annual_returns_chart(stock_data, ticker)
+
     st.plotly_chart(
         annual_fig,
         use_container_width=True,
@@ -1370,14 +1500,14 @@ with tab_benchmark:
             }
         )
 
-        dark_table(comparison_df, "Benchmark Comparison Table")
+        dark_table(comparison_df, "Benchmark Comparison Table", height=360)
 
     else:
         st.info("Turn on benchmark comparison in the sidebar to view this section.")
 
 
 # ============================================================
-# STRESS PERIOD TAB
+# STRESS TAB
 # ============================================================
 
 with tab_stress:
@@ -1453,7 +1583,7 @@ with tab_stress:
                 }
             )
 
-            dark_table(stress_df, "Stress Period Summary")
+            dark_table(stress_df, "Stress Period Summary", height=430)
 
     else:
         stress_stock_data = load_price_data(
@@ -1516,12 +1646,23 @@ with tab_full_history:
             <div class="advisor-box">
                 <b>Advisor Note:</b><br>
                 This section uses the full available history for <b>{ticker}</b>, not just the selected time period.
-                This is useful when showing clients that performance has varied across market cycles.
-                Even strong long-term stocks can have weak calendar years, deep drawdowns, and poor rolling-return periods.
+                It helps show that even strong long-term stocks can have weak calendar years, deep drawdowns,
+                and poor rolling-return windows.
             </div>
             """,
             unsafe_allow_html=True
         )
+
+        section_header("Good Years and Bad Years")
+        bad_good_year_summary_cards(full_data, ticker)
+
+        section_header("Worst Rolling Periods")
+        worst_rolling_periods_table(full_data, ticker)
+
+        section_header("Rolling Return Summary")
+        rolling_period_summary_table(full_data, ticker)
+
+        section_header("Full-History Price and Annual Returns")
 
         st.plotly_chart(
             price_chart(full_data, ticker, full_history=True),
@@ -1538,7 +1679,6 @@ with tab_full_history:
         )
 
         best_worst_years_table(full_data, ticker)
-        rolling_period_summary_table(full_data, ticker)
 
         full_annual_table = pd.DataFrame(
             {
@@ -1549,11 +1689,54 @@ with tab_full_history:
             }
         )
 
-        dark_table(full_annual_table, f"{ticker} Full Annual Return History")
+        dark_table(full_annual_table, f"{ticker} Full Annual Return History", height=700)
 
 
 # ============================================================
-# HISTORICAL TABLES TAB
+# MULTI-STOCK TAB
+# ============================================================
+
+with tab_multi:
+    section_header("Compare Multiple Stocks")
+
+    multi_tickers = parse_ticker_list(multi_tickers_input)
+
+    if len(multi_tickers) == 0:
+        st.info("Enter multiple tickers in the sidebar, separated by commas.")
+    else:
+        st.markdown(
+            """
+            <div class="advisor-box">
+                <b>Advisor Note:</b><br>
+                This view compares multiple stocks using the same selected time period and the same initial investment.
+                It can help compare concentrated holdings, watchlist names, replacement candidates, or different stocks
+                within the same sector.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        multi_fig, multi_summary = multi_stock_growth_chart(
+            tickers=multi_tickers,
+            start_date=start_date,
+            end_date=end_date,
+            initial_investment=initial_investment
+        )
+
+        st.plotly_chart(
+            multi_fig,
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
+
+        if not multi_summary.empty:
+            dark_table(multi_summary, "Multi-Stock Performance Summary", height=460)
+        else:
+            st.warning("No valid data found for the entered tickers.")
+
+
+# ============================================================
+# TABLES TAB
 # ============================================================
 
 with tab_tables:
@@ -1570,7 +1753,7 @@ with tab_tables:
         }
     )
 
-    dark_table(annual_table, "Selected-Period Annual Returns")
+    dark_table(annual_table, "Selected-Period Annual Returns", height=520)
 
     section_header("Most Recent Data")
 
@@ -1590,7 +1773,7 @@ with tab_tables:
         }
     )
 
-    dark_table(recent_table, "Most Recent Data")
+    dark_table(recent_table, "Most Recent Data", height=700)
 
     csv_download = stock_data.to_csv().encode("utf-8")
 
@@ -1602,48 +1785,6 @@ with tab_tables:
         use_container_width=True
     )
 
-# ============================================================
-# MULTI-STOCK COMPARE TAB
-# ============================================================
-
-with tab_multi:
-    section_header("Compare Multiple Stocks")
-
-    multi_tickers = parse_ticker_list(multi_tickers_input)
-
-    if len(multi_tickers) == 0:
-        st.info("Enter multiple tickers in the sidebar, separated by commas.")
-    else:
-        st.markdown(
-            f"""
-            <div class="advisor-box">
-                <b>Advisor Note:</b><br>
-                This view compares multiple stocks using the same selected time period and the same initial investment.
-                It can help compare concentrated holdings, watchlist names, replacement candidates, or different stocks
-                within the same sector.
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        multi_fig, multi_summary = multi_stock_growth_chart(
-            tickers=multi_tickers,
-            start_date=start_date,
-            end_date=end_date,
-            period_choice=period_choice,
-            initial_investment=initial_investment
-        )
-
-        st.plotly_chart(
-            multi_fig,
-            use_container_width=True,
-            config={"displayModeBar": False}
-        )
-
-        if not multi_summary.empty:
-            dark_table(multi_summary, "Multi-Stock Performance Summary", height=420)
-        else:
-            st.warning("No valid data found for the entered tickers.")
 
 # ============================================================
 # DISCLAIMER
