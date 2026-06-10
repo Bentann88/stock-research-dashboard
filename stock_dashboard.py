@@ -1,6 +1,6 @@
 # ============================================================
 # PROFESSIONAL STOCK HISTORY RESEARCH DASHBOARD
-# STREAMLIT VERSION
+# Streamlit + yfinance + Plotly
 # ============================================================
 
 import streamlit as st
@@ -24,7 +24,7 @@ st.set_page_config(
 
 
 # ============================================================
-# DARK PROFESSIONAL CSS
+# CSS — DARK PROFESSIONAL THEME + READABLE INPUTS + DARK TABLES
 # ============================================================
 
 st.markdown(
@@ -40,7 +40,6 @@ st.markdown(
             border-right: 1px solid #334155;
         }
 
-        /* Sidebar labels only */
         [data-testid="stSidebar"] label,
         [data-testid="stSidebar"] p,
         [data-testid="stSidebar"] h1,
@@ -53,36 +52,19 @@ st.markdown(
             opacity: 1 !important;
         }
 
-        /* Sidebar captions */
         [data-testid="stSidebar"] .stCaptionContainer,
         [data-testid="stSidebar"] .stCaptionContainer p {
             color: #CBD5E1 !important;
             opacity: 1 !important;
         }
 
-        /* Text input boxes */
         [data-testid="stSidebar"] div[data-baseweb="input"] {
             background-color: #FFFFFF !important;
             border-radius: 8px !important;
         }
 
-        [data-testid="stSidebar"] div[data-baseweb="input"] input {
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
-            background-color: #FFFFFF !important;
-            caret-color: #000000 !important;
-            font-weight: 700 !important;
-        }
-
-        [data-testid="stSidebar"] input {
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
-            background-color: #FFFFFF !important;
-            caret-color: #000000 !important;
-            font-weight: 700 !important;
-        }
-
-        /* Number input */
+        [data-testid="stSidebar"] div[data-baseweb="input"] input,
+        [data-testid="stSidebar"] input,
         [data-testid="stSidebar"] input[type="number"] {
             color: #000000 !important;
             -webkit-text-fill-color: #000000 !important;
@@ -91,26 +73,6 @@ st.markdown(
             font-weight: 700 !important;
         }
 
-        /* Number input plus/minus buttons */
-        [data-testid="stSidebar"] button {
-            color: #000000 !important;
-        }
-
-        /* But keep the main run button white text */
-        [data-testid="stSidebar"] .stButton button {
-            background: #2563EB !important;
-            color: #FFFFFF !important;
-            border: 1px solid #60A5FA !important;
-            font-weight: 800 !important;
-            border-radius: 10px !important;
-        }
-
-        [data-testid="stSidebar"] .stButton button:hover {
-            background: #1D4ED8 !important;
-            color: #FFFFFF !important;
-        }
-
-        /* Select/dropdown boxes */
         [data-testid="stSidebar"] div[data-baseweb="select"] > div {
             background-color: #FFFFFF !important;
             color: #000000 !important;
@@ -128,7 +90,6 @@ st.markdown(
             fill: #000000 !important;
         }
 
-        /* Date input */
         [data-testid="stSidebar"] .stDateInput input {
             color: #000000 !important;
             -webkit-text-fill-color: #000000 !important;
@@ -137,10 +98,22 @@ st.markdown(
             font-weight: 700 !important;
         }
 
-        /* Checkbox label */
         [data-testid="stSidebar"] .stCheckbox label span {
             color: #F8FAFC !important;
             font-weight: 700 !important;
+        }
+
+        [data-testid="stSidebar"] .stButton button {
+            background: #2563EB !important;
+            color: #FFFFFF !important;
+            border: 1px solid #60A5FA !important;
+            font-weight: 800 !important;
+            border-radius: 10px !important;
+        }
+
+        [data-testid="stSidebar"] .stButton button:hover {
+            background: #1D4ED8 !important;
+            color: #FFFFFF !important;
         }
 
         .main-title {
@@ -269,18 +242,59 @@ st.markdown(
             border: 1px solid #60A5FA !important;
         }
 
-        table {
-            color: #F8FAFC !important;
+        [data-testid="stPlotlyChart"] {
+            background: #111827;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+            margin-bottom: 24px;
         }
 
-        div[data-testid="stDataFrame"] {
-            border: 1px solid #475569;
-            border-radius: 12px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #111827 !important;
+            color: #F8FAFC !important;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            overflow: hidden;
+            font-size: 0.95rem;
+        }
+
+        thead tr {
+            background: #1E293B !important;
+        }
+
+        th {
+            color: #CBD5E1 !important;
+            font-weight: 800 !important;
+            padding: 13px 15px !important;
+            border-bottom: 1px solid #334155 !important;
+            text-align: left !important;
+            white-space: nowrap;
+        }
+
+        td {
+            color: #F8FAFC !important;
+            padding: 12px 15px !important;
+            border-bottom: 1px solid #253044 !important;
+            white-space: nowrap;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #0F172A !important;
+        }
+
+        tbody tr:hover {
+            background: #1E293B !important;
         }
     </style>
     """,
     unsafe_allow_html=True
 )
+
+
 # ============================================================
 # CONSTANTS
 # ============================================================
@@ -337,6 +351,12 @@ def fmt_number(x):
     return f"{x:,.2f}"
 
 
+def fmt_volume(x):
+    if x is None or pd.isna(x):
+        return "N/A"
+    return f"{x:,.0f}"
+
+
 def return_class(x):
     if x is None or pd.isna(x):
         return "neutral"
@@ -347,6 +367,62 @@ def drawdown_class(x):
     if x is None or pd.isna(x):
         return "neutral"
     return "negative" if x < 0 else "neutral"
+
+
+def color_span(value, text=None, reverse=False):
+    if text is None:
+        text = fmt_pct(value)
+
+    if value is None or pd.isna(value):
+        color = "#FFFFFF"
+    else:
+        if reverse:
+            color = "#4ADE80" if value >= 0 else "#F87171"
+        else:
+            color = "#4ADE80" if value >= 0 else "#F87171"
+
+    return f'<span style="color:{color}; font-weight:800;">{text}</span>'
+
+
+# ============================================================
+# DARK TABLE HELPER
+# ============================================================
+
+def dark_table(df, title=None):
+    title_html = ""
+
+    if title:
+        title_html = f"""
+        <div style="
+            font-size:1.25rem;
+            font-weight:800;
+            color:#FFFFFF;
+            margin-top:1.2rem;
+            margin-bottom:0.6rem;
+        ">
+            {title}
+        </div>
+        """
+
+    html_table = df.to_html(index=False, escape=False)
+
+    st.markdown(
+        f"""
+        {title_html}
+        <div style="
+            background:#111827;
+            border:1px solid #334155;
+            border-radius:14px;
+            padding:0;
+            overflow-x:auto;
+            margin-bottom:1.5rem;
+            box-shadow:0 8px 22px rgba(0,0,0,0.25);
+        ">
+            {html_table}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 # ============================================================
@@ -394,13 +470,23 @@ def load_price_data(ticker, start_date=None, end_date=None, period="max", initia
     data["Daily Return"] = data["Close"].pct_change()
     data["Growth of $1"] = (1 + data["Daily Return"]).cumprod()
     data["Growth of $1"] = data["Growth of $1"].fillna(1.0)
-
     data["Portfolio Value"] = data["Growth of $1"] * initial_investment
 
     running_max = data["Portfolio Value"].cummax()
     data["Drawdown"] = data["Portfolio Value"] / running_max - 1
 
     return data
+
+
+@st.cache_data(show_spinner=False)
+def load_full_history(ticker, initial_investment=10000):
+    return load_price_data(
+        ticker=ticker,
+        start_date=None,
+        end_date=None,
+        period="max",
+        initial_investment=initial_investment
+    )
 
 
 @st.cache_data(show_spinner=False)
@@ -495,44 +581,58 @@ def calculate_stress_metrics(ticker, benchmark, stress_start, stress_end, initia
 # CHART HELPERS
 # ============================================================
 
-def apply_chart_layout(fig, title, yaxis_title):
+def apply_chart_layout(fig, title, yaxis_title, height=430):
     fig.update_layout(
         template=PLOT_TEMPLATE,
         title=dict(
             text=title,
-            x=0.02,
+            x=0.01,
             xanchor="left",
-            font=dict(size=20, color="#F9FAFB")
+            y=0.96,
+            font=dict(size=18, color="#F8FAFC", family="Arial Black")
         ),
-        paper_bgcolor="#0B1120",
+        paper_bgcolor="#111827",
         plot_bgcolor="#111827",
-        font=dict(color="#D1D5DB"),
-        margin=dict(l=40, r=30, t=65, b=40),
+        font=dict(color="#CBD5E1", size=12),
+        height=height,
+        margin=dict(l=55, r=30, t=70, b=45),
         hovermode="x unified",
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.02,
+            y=1.03,
             xanchor="right",
-            x=1
+            x=1,
+            font=dict(size=11, color="#CBD5E1"),
+            bgcolor="rgba(17,24,39,0)"
         ),
         xaxis=dict(
             showgrid=True,
-            gridcolor="#1F2937",
-            zeroline=False
+            gridcolor="#253044",
+            zeroline=False,
+            linecolor="#334155",
+            tickfont=dict(color="#94A3B8", size=11),
+            rangeslider=dict(visible=False)
         ),
         yaxis=dict(
-            title=yaxis_title,
+            title=dict(
+                text=yaxis_title,
+                font=dict(color="#CBD5E1", size=12)
+            ),
             showgrid=True,
-            gridcolor="#1F2937",
-            zeroline=False
+            gridcolor="#253044",
+            zeroline=False,
+            linecolor="#334155",
+            tickfont=dict(color="#94A3B8", size=11)
         )
     )
 
     return fig
 
 
-def price_chart(data, ticker):
+def price_chart(data, ticker, full_history=False):
+    title = f"{ticker} Full Available Price History" if full_history else f"{ticker} Adjusted Price History"
+
     fig = go.Figure()
 
     fig.add_trace(
@@ -546,7 +646,7 @@ def price_chart(data, ticker):
         )
     )
 
-    fig = apply_chart_layout(fig, f"{ticker} Adjusted Price History", "Adjusted Price")
+    fig = apply_chart_layout(fig, title, "Adjusted Price", height=460)
     fig.update_yaxes(tickprefix="$")
 
     return fig
@@ -569,7 +669,8 @@ def growth_chart(data, ticker, initial_investment):
     fig = apply_chart_layout(
         fig,
         f"Growth of {fmt_dollar(initial_investment)} Invested in {ticker}",
-        "Portfolio Value"
+        "Portfolio Value",
+        height=460
     )
     fig.update_yaxes(tickprefix="$")
 
@@ -604,7 +705,8 @@ def benchmark_growth_chart(stock_data, benchmark_data, ticker, benchmark, initia
     fig = apply_chart_layout(
         fig,
         f"Growth of {fmt_dollar(initial_investment)}: {ticker} vs. {benchmark}",
-        "Portfolio Value"
+        "Portfolio Value",
+        height=500
     )
     fig.update_yaxes(tickprefix="$")
 
@@ -627,7 +729,7 @@ def drawdown_chart(data, ticker):
         )
     )
 
-    fig = apply_chart_layout(fig, f"{ticker} Drawdown Over Time", "Drawdown")
+    fig = apply_chart_layout(fig, f"{ticker} Drawdown Over Time", "Drawdown", height=460)
     fig.update_yaxes(tickformat=".0%")
 
     return fig
@@ -656,17 +758,18 @@ def rolling_return_chart(data, ticker, rolling_years):
 
     fig.add_hline(y=0, line_width=1, line_dash="dash", line_color="#6B7280")
 
-    fig = apply_chart_layout(fig, f"{ticker} {rolling_years}-Year Rolling Returns", "Rolling Return")
+    fig = apply_chart_layout(fig, f"{ticker} {rolling_years}-Year Rolling Returns", "Rolling Return", height=460)
     fig.update_yaxes(tickformat=".0%")
 
     return fig
 
 
-def annual_returns_chart(data, ticker):
+def annual_returns_chart(data, ticker, full_history=False):
     annual_returns = data["Close"].resample("YE").last().pct_change().dropna()
     annual_returns.index = annual_returns.index.year
 
     colors = ["#22C55E" if x >= 0 else "#EF4444" for x in annual_returns.values]
+    title = f"{ticker} Full Available Annual Returns" if full_history else f"{ticker} Calendar-Year Returns"
 
     fig = go.Figure()
 
@@ -682,14 +785,14 @@ def annual_returns_chart(data, ticker):
 
     fig.add_hline(y=0, line_width=1, line_dash="dash", line_color="#6B7280")
 
-    fig = apply_chart_layout(fig, f"{ticker} Calendar-Year Returns", "Annual Return")
+    fig = apply_chart_layout(fig, title, "Annual Return", height=520)
     fig.update_yaxes(tickformat=".0%")
 
     return fig, annual_returns
 
 
 # ============================================================
-# UI CARD HELPERS
+# UI HELPERS
 # ============================================================
 
 def metric_card(label, value, css_class="neutral"):
@@ -736,7 +839,7 @@ def advisor_summary(ticker, benchmark, metrics, benchmark_metrics=None):
         excess_cagr = cagr - benchmark_metrics.get("CAGR", np.nan)
         benchmark_text = (
             f"Relative to {benchmark}, {ticker} had an annualized return difference "
-            f"of {fmt_pct(excess_cagr)} over the selected period."
+            f"of <b>{fmt_pct(excess_cagr)}</b> over the selected period."
         )
     else:
         benchmark_text = "No benchmark comparison was selected."
@@ -755,6 +858,77 @@ def advisor_summary(ticker, benchmark, metrics, benchmark_metrics=None):
     """
 
     st.markdown(summary, unsafe_allow_html=True)
+
+
+# ============================================================
+# FULL HISTORY TABLE HELPERS
+# ============================================================
+
+def best_worst_years_table(full_data, ticker):
+    annual_returns = full_data["Close"].resample("YE").last().pct_change().dropna()
+    annual_returns.index = annual_returns.index.year
+
+    worst_years = annual_returns.sort_values().head(10)
+    best_years = annual_returns.sort_values(ascending=False).head(10)
+
+    rows = []
+    max_len = max(len(worst_years), len(best_years))
+
+    for i in range(max_len):
+        worst_year = worst_years.index[i] if i < len(worst_years) else ""
+        worst_ret = worst_years.iloc[i] if i < len(worst_years) else np.nan
+
+        best_year = best_years.index[i] if i < len(best_years) else ""
+        best_ret = best_years.iloc[i] if i < len(best_years) else np.nan
+
+        rows.append({
+            "Worst Year": worst_year,
+            "Worst Return": color_span(worst_ret),
+            "Best Year": best_year,
+            "Best Return": color_span(best_ret)
+        })
+
+    df = pd.DataFrame(rows)
+    dark_table(df, f"{ticker} Best and Worst Calendar Years")
+
+
+def rolling_period_summary_table(full_data, ticker):
+    periods = {
+        "1-Year": 252,
+        "3-Year": 252 * 3,
+        "5-Year": 252 * 5,
+        "10-Year": 252 * 10
+    }
+
+    rows = []
+
+    for label, window in periods.items():
+        temp = full_data.copy()
+        temp[f"{label} Rolling Return"] = temp["Close"] / temp["Close"].shift(window) - 1
+
+        rolling_series = temp[f"{label} Rolling Return"].dropna()
+
+        if rolling_series.empty:
+            rows.append({
+                "Rolling Period": label,
+                "Best Return": "N/A",
+                "Worst Return": "N/A",
+                "Average Return": "N/A"
+            })
+        else:
+            best_value = rolling_series.max()
+            worst_value = rolling_series.min()
+            avg_value = rolling_series.mean()
+
+            rows.append({
+                "Rolling Period": label,
+                "Best Return": color_span(best_value),
+                "Worst Return": color_span(worst_value),
+                "Average Return": color_span(avg_value)
+            })
+
+    df = pd.DataFrame(rows)
+    dark_table(df, f"{ticker} Historical Rolling Return Summary")
 
 
 # ============================================================
@@ -778,7 +952,7 @@ period_choice = st.sidebar.selectbox(
         "Max Available",
         "Custom"
     ],
-    index=3
+    index=6
 )
 
 today = date.today()
@@ -812,21 +986,26 @@ stress_period_name = st.sidebar.selectbox(
     index=2
 )
 
-run_button = st.sidebar.button("Run Analysis", type="primary", use_container_width=True)
+st.sidebar.button("Run Analysis", type="primary", use_container_width=True)
 
 st.sidebar.markdown("---")
 st.sidebar.caption("Data source: Yahoo Finance via yfinance. Verify externally for client-facing use.")
 
 
 # ============================================================
-# MAIN APP
+# MAIN APP HEADER
 # ============================================================
 
 st.markdown('<div class="main-title">📈 Stock History Research Dashboard</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="subtitle">Advisor-facing stock research with performance, risk, stress-period testing, sector context, and benchmark comparison.</div>',
+    '<div class="subtitle">Advisor-facing stock research with performance, risk, stress-period testing, full-history context, and benchmark comparison.</div>',
     unsafe_allow_html=True
 )
+
+
+# ============================================================
+# LOAD SELECTED PERIOD DATA
+# ============================================================
 
 start_date, end_date = get_date_range(period_choice, custom_start, custom_end)
 
@@ -873,7 +1052,7 @@ if show_benchmark and benchmark:
 
 
 # ============================================================
-# TOP OVERVIEW STRIP
+# TOP STRIP
 # ============================================================
 
 top_cols = st.columns(5)
@@ -898,12 +1077,13 @@ with top_cols[4]:
 # TABS
 # ============================================================
 
-tab_overview, tab_risk, tab_benchmark, tab_stress, tab_tables = st.tabs(
+tab_overview, tab_risk, tab_benchmark, tab_stress, tab_full_history, tab_tables = st.tabs(
     [
         "Overview",
         "Risk",
         "Benchmark Comparison",
         "Stress Periods",
+        "Full History",
         "Historical Tables"
     ]
 )
@@ -997,10 +1177,18 @@ with tab_overview:
     chart_col1, chart_col2 = st.columns(2)
 
     with chart_col1:
-        st.plotly_chart(price_chart(stock_data, ticker), use_container_width=True)
+        st.plotly_chart(
+            price_chart(stock_data, ticker),
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
 
     with chart_col2:
-        st.plotly_chart(growth_chart(stock_data, ticker, initial_investment), use_container_width=True)
+        st.plotly_chart(
+            growth_chart(stock_data, ticker, initial_investment),
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
 
 
 # ============================================================
@@ -1024,15 +1212,27 @@ with tab_risk:
     c1, c2 = st.columns(2)
 
     with c1:
-        st.plotly_chart(drawdown_chart(stock_data, ticker), use_container_width=True)
+        st.plotly_chart(
+            drawdown_chart(stock_data, ticker),
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
 
     with c2:
-        st.plotly_chart(rolling_return_chart(stock_data, ticker, rolling_years), use_container_width=True)
+        st.plotly_chart(
+            rolling_return_chart(stock_data, ticker, rolling_years),
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
 
     section_header("Calendar-Year Returns")
 
     annual_fig, annual_returns = annual_returns_chart(stock_data, ticker)
-    st.plotly_chart(annual_fig, use_container_width=True)
+    st.plotly_chart(
+        annual_fig,
+        use_container_width=True,
+        config={"displayModeBar": False}
+    )
 
 
 # ============================================================
@@ -1061,7 +1261,8 @@ with tab_benchmark:
 
         st.plotly_chart(
             benchmark_growth_chart(stock_data, benchmark_data, ticker, benchmark, initial_investment),
-            use_container_width=True
+            use_container_width=True,
+            config={"displayModeBar": False}
         )
 
         comparison_df = pd.DataFrame(
@@ -1074,23 +1275,23 @@ with tab_benchmark:
                     "Ending Value"
                 ],
                 ticker: [
-                    fmt_pct(metrics["Total Return"]),
-                    fmt_pct(metrics["CAGR"]),
+                    color_span(metrics["Total Return"]),
+                    color_span(metrics["CAGR"]),
                     fmt_pct(metrics["Annualized Volatility"]),
-                    fmt_pct(metrics["Max Drawdown"]),
+                    color_span(metrics["Max Drawdown"]),
                     fmt_dollar(metrics["Ending Value"])
                 ],
                 benchmark: [
-                    fmt_pct(benchmark_metrics["Total Return"]),
-                    fmt_pct(benchmark_metrics["CAGR"]),
+                    color_span(benchmark_metrics["Total Return"]),
+                    color_span(benchmark_metrics["CAGR"]),
                     fmt_pct(benchmark_metrics["Annualized Volatility"]),
-                    fmt_pct(benchmark_metrics["Max Drawdown"]),
+                    color_span(benchmark_metrics["Max Drawdown"]),
                     fmt_dollar(benchmark_metrics["Ending Value"])
                 ]
             }
         )
 
-        st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+        dark_table(comparison_df, "Benchmark Comparison Table")
 
     else:
         st.info("Turn on benchmark comparison in the sidebar to view this section.")
@@ -1146,7 +1347,8 @@ with tab_stress:
                     benchmark,
                     initial_investment
                 ),
-                use_container_width=True
+                use_container_width=True,
+                config={"displayModeBar": False}
             )
 
             stress_df = pd.DataFrame(
@@ -1161,18 +1363,18 @@ with tab_stress:
                         "Benchmark Ending Value"
                     ],
                     "Value": [
-                        fmt_pct(stress_summary["Stock Return"]),
-                        fmt_pct(stress_summary["Benchmark Return"]),
-                        fmt_pct(stress_summary["Excess Return"]),
-                        fmt_pct(stress_summary["Stock Max Drawdown"]),
-                        fmt_pct(stress_summary["Benchmark Max Drawdown"]),
+                        color_span(stress_summary["Stock Return"]),
+                        color_span(stress_summary["Benchmark Return"]),
+                        color_span(stress_summary["Excess Return"]),
+                        color_span(stress_summary["Stock Max Drawdown"]),
+                        color_span(stress_summary["Benchmark Max Drawdown"]),
                         fmt_dollar(stress_summary["Stock Ending Value"]),
                         fmt_dollar(stress_summary["Benchmark Ending Value"])
                     ]
                 }
             )
 
-            st.dataframe(stress_df, use_container_width=True, hide_index=True)
+            dark_table(stress_df, "Stress Period Summary")
 
     else:
         stress_stock_data = load_price_data(
@@ -1196,11 +1398,83 @@ with tab_stress:
             with s3:
                 metric_card("Stress Ending Value", fmt_dollar(stress_metrics["Ending Value"]), "neutral")
 
-            st.plotly_chart(growth_chart(stress_stock_data, ticker, initial_investment), use_container_width=True)
+            st.plotly_chart(
+                growth_chart(stress_stock_data, ticker, initial_investment),
+                use_container_width=True,
+                config={"displayModeBar": False}
+            )
 
 
 # ============================================================
-# TABLES TAB
+# FULL HISTORY TAB
+# ============================================================
+
+with tab_full_history:
+    section_header("Full Available History")
+
+    full_data = load_full_history(ticker, initial_investment)
+
+    if full_data.empty:
+        st.warning("Full history was not available for this ticker.")
+    else:
+        full_metrics = calculate_metrics(full_data, ticker, initial_investment)
+
+        fh1, fh2, fh3, fh4, fh5 = st.columns(5)
+
+        with fh1:
+            metric_card("Full-History Start", str(full_metrics["Start Date"]), "neutral")
+        with fh2:
+            metric_card("Full-History Return", fmt_pct(full_metrics["Total Return"]), return_class(full_metrics["Total Return"]))
+        with fh3:
+            metric_card("Full-History CAGR", fmt_pct(full_metrics["CAGR"]), return_class(full_metrics["CAGR"]))
+        with fh4:
+            metric_card("Worst Drawdown", fmt_pct(full_metrics["Max Drawdown"]), "negative")
+        with fh5:
+            metric_card("Ending Value", fmt_dollar(full_metrics["Ending Value"]), "positive")
+
+        st.markdown(
+            f"""
+            <div class="advisor-box">
+                <b>Advisor Note:</b><br>
+                This section uses the full available history for <b>{ticker}</b>, not just the selected time period.
+                This is useful when showing clients that performance has varied across market cycles.
+                Even strong long-term stocks can have weak calendar years, deep drawdowns, and poor rolling-return periods.
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        st.plotly_chart(
+            price_chart(full_data, ticker, full_history=True),
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
+
+        full_annual_fig, full_annual_returns = annual_returns_chart(full_data, ticker, full_history=True)
+
+        st.plotly_chart(
+            full_annual_fig,
+            use_container_width=True,
+            config={"displayModeBar": False}
+        )
+
+        best_worst_years_table(full_data, ticker)
+        rolling_period_summary_table(full_data, ticker)
+
+        full_annual_table = pd.DataFrame(
+            {
+                "Year": full_annual_returns.index,
+                "Annual Return": [
+                    color_span(x) for x in full_annual_returns.values
+                ]
+            }
+        )
+
+        dark_table(full_annual_table, f"{ticker} Full Annual Return History")
+
+
+# ============================================================
+# HISTORICAL TABLES TAB
 # ============================================================
 
 with tab_tables:
@@ -1211,11 +1485,13 @@ with tab_tables:
     annual_table = pd.DataFrame(
         {
             "Year": annual_returns.index,
-            "Annual Return": [fmt_pct(x) for x in annual_returns.values]
+            "Annual Return": [
+                color_span(x) for x in annual_returns.values
+            ]
         }
     )
 
-    st.dataframe(annual_table, use_container_width=True, hide_index=True)
+    dark_table(annual_table, "Selected-Period Annual Returns")
 
     section_header("Most Recent Data")
 
@@ -1228,14 +1504,14 @@ with tab_tables:
             "High": [fmt_dollar(x) for x in recent["High"]],
             "Low": [fmt_dollar(x) for x in recent["Low"]],
             "Close": [fmt_dollar(x) for x in recent["Close"]],
-            "Volume": [f"{x:,.0f}" for x in recent["Volume"]],
-            "Daily Return": [fmt_pct(x) for x in recent["Daily Return"]],
+            "Volume": [fmt_volume(x) for x in recent["Volume"]],
+            "Daily Return": [color_span(x) for x in recent["Daily Return"]],
             "Portfolio Value": [fmt_dollar(x) for x in recent["Portfolio Value"]],
-            "Drawdown": [fmt_pct(x) for x in recent["Drawdown"]]
+            "Drawdown": [color_span(x) for x in recent["Drawdown"]]
         }
     )
 
-    st.dataframe(recent_table, use_container_width=True, hide_index=True)
+    dark_table(recent_table, "Most Recent Data")
 
     csv_download = stock_data.to_csv().encode("utf-8")
 
