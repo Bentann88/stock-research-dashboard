@@ -32,115 +32,141 @@ st.markdown(
     <style>
         .stApp {
             background: #0B1120;
-            color: #E5E7EB;
+            color: #F8FAFC;
         }
 
         [data-testid="stSidebar"] {
             background: #111827;
-            border-right: 1px solid #1F2937;
+            border-right: 1px solid #334155;
+        }
+
+        [data-testid="stSidebar"] * {
+            color: #F8FAFC !important;
+        }
+
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] span {
+            color: #E5E7EB !important;
+            opacity: 1 !important;
+        }
+
+        input, textarea, select {
+            color: #111827 !important;
+            background-color: #FFFFFF !important;
         }
 
         .main-title {
-            font-size: 2.3rem;
-            font-weight: 800;
-            color: #F9FAFB;
-            margin-bottom: 0.2rem;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #FFFFFF;
+            margin-bottom: 0.3rem;
         }
 
         .subtitle {
-            font-size: 1rem;
-            color: #9CA3AF;
+            font-size: 1.05rem;
+            color: #D1D5DB;
             margin-bottom: 1.5rem;
+            font-weight: 500;
         }
 
         .section-header {
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #F9FAFB;
-            margin-top: 1.4rem;
-            margin-bottom: 0.8rem;
-            border-bottom: 1px solid #1F2937;
-            padding-bottom: 0.4rem;
+            font-size: 1.45rem;
+            font-weight: 850;
+            color: #FFFFFF;
+            margin-top: 1.5rem;
+            margin-bottom: 0.9rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 0.5rem;
         }
 
         .metric-card {
-            background: linear-gradient(180deg, #111827 0%, #0F172A 100%);
-            border: 1px solid #1F2937;
+            background: linear-gradient(180deg, #1E293B 0%, #111827 100%);
+            border: 1px solid #475569;
             border-radius: 14px;
-            padding: 16px 18px;
-            box-shadow: 0 8px 22px rgba(0,0,0,0.25);
-            min-height: 105px;
+            padding: 18px 20px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+            min-height: 110px;
         }
 
         .metric-label {
-            color: #9CA3AF;
-            font-size: 0.82rem;
-            margin-bottom: 0.45rem;
+            color: #CBD5E1;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.55rem;
         }
 
         .metric-value {
-            font-size: 1.45rem;
-            font-weight: 800;
-            color: #F9FAFB;
+            font-size: 1.65rem;
+            font-weight: 900;
+            color: #FFFFFF;
+            letter-spacing: 0.2px;
         }
 
         .positive {
-            color: #22C55E !important;
+            color: #4ADE80 !important;
         }
 
         .negative {
-            color: #EF4444 !important;
+            color: #F87171 !important;
         }
 
         .neutral {
-            color: #F9FAFB !important;
+            color: #FFFFFF !important;
         }
 
         .info-card {
-            background: #111827;
-            border: 1px solid #1F2937;
+            background: linear-gradient(180deg, #1E293B 0%, #111827 100%);
+            border: 1px solid #475569;
             border-radius: 14px;
-            padding: 16px;
-            box-shadow: 0 8px 22px rgba(0,0,0,0.22);
-            min-height: 90px;
+            padding: 17px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+            min-height: 96px;
         }
 
         .info-label {
-            color: #9CA3AF;
-            font-size: 0.78rem;
-            margin-bottom: 0.35rem;
+            color: #CBD5E1;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 0.45rem;
         }
 
         .info-value {
-            color: #F9FAFB;
-            font-size: 1rem;
-            font-weight: 700;
+            color: #FFFFFF;
+            font-size: 1.08rem;
+            font-weight: 850;
         }
 
         .advisor-box {
-            background: #0F172A;
-            border-left: 5px solid #3B82F6;
+            background: #1E293B;
+            border: 1px solid #475569;
+            border-left: 6px solid #60A5FA;
             border-radius: 12px;
-            padding: 18px;
-            color: #D1D5DB;
+            padding: 20px;
+            color: #F8FAFC;
+            font-size: 1rem;
+            line-height: 1.65;
             margin-top: 1rem;
             margin-bottom: 1rem;
         }
 
         .warning-box {
-            background: #1F2937;
-            border-left: 5px solid #F59E0B;
+            background: #1E293B;
+            border: 1px solid #475569;
+            border-left: 6px solid #FBBF24;
             border-radius: 12px;
-            padding: 18px;
-            color: #D1D5DB;
+            padding: 20px;
+            color: #F8FAFC;
+            font-size: 1rem;
+            line-height: 1.55;
             margin-top: 1rem;
             margin-bottom: 1rem;
         }
 
         div[data-testid="stMetric"] {
-            background: #111827;
-            border: 1px solid #1F2937;
-            padding: 15px;
+            background: #1E293B;
+            border: 1px solid #475569;
+            padding: 16px;
             border-radius: 14px;
         }
 
@@ -149,20 +175,40 @@ st.markdown(
         }
 
         .stTabs [data-baseweb="tab"] {
-            background-color: #111827;
+            background-color: #1E293B;
             border-radius: 10px;
-            color: #D1D5DB;
+            color: #F8FAFC;
             padding: 10px 18px;
-            border: 1px solid #1F2937;
+            border: 1px solid #475569;
+            font-weight: 700;
         }
 
         .stTabs [aria-selected="true"] {
-            background-color: #1D4ED8 !important;
+            background-color: #2563EB !important;
             color: #FFFFFF !important;
+            border: 1px solid #60A5FA !important;
         }
 
         table {
-            color: #E5E7EB !important;
+            color: #F8FAFC !important;
+        }
+
+        div[data-testid="stDataFrame"] {
+            border: 1px solid #475569;
+            border-radius: 12px;
+        }
+
+        .stButton > button {
+            background: #2563EB !important;
+            color: #FFFFFF !important;
+            border: 1px solid #60A5FA !important;
+            font-weight: 800 !important;
+            border-radius: 10px !important;
+        }
+
+        .stButton > button:hover {
+            background: #1D4ED8 !important;
+            color: #FFFFFF !important;
         }
     </style>
     """,
